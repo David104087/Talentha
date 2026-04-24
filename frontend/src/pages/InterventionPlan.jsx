@@ -136,6 +136,47 @@ function scrollTo(id) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+function SkippedDims({ summary, plans }) {
+  const plannedIds = new Set(plans.map(p => p.id))
+  const skipped = summary.filter(
+    d => (d.level === 'critical' || d.level === 'high') && !plannedIds.has(d.id)
+  )
+  if (skipped.length === 0) return null
+
+  return (
+    <div className="skipped-dims">
+      <div className="skipped-header">
+        <span className="skipped-title">Dimensiones elegibles sin plan detallado</span>
+        <span className="skipped-sub">
+          Score &lt; 75 — elegibles para intervención, fuera del top {plans.length} por prioridad de peso
+        </span>
+      </div>
+      <div className="skipped-list">
+        {skipped.map(d => {
+          const s = LEVEL_STYLES[d.level]
+          return (
+            <div
+              key={d.id}
+              className="skipped-item"
+              style={{ background: s.bg, borderColor: s.ring }}
+            >
+              <span className="skipped-code">{d.id}</span>
+              <span className="skipped-badge" style={{ color: s.fg }}>
+                <span className="skipped-dot" style={{ background: s.fg }} />
+                {s.label}
+              </span>
+              <span className="skipped-name">{d.name}</span>
+              <span className="skipped-meta">
+                {d.score} pts · peso {d.weight}%
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function InterventionPlan() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -338,6 +379,8 @@ export default function InterventionPlan() {
               summary={plan.summary}
               highlightedId={selected}
             />
+
+            <SkippedDims summary={plan.summary} plans={plan.plans} />
           </section>
 
           {/* Page footer */}
