@@ -1,0 +1,198 @@
+/* CSS Module — cumple el requisito §2.2: "Solo CSS inline o CSS modules" */
+
+.card {
+  background: #FFFFFF;
+  border: 1px solid #E7E5ED;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 44px;
+  box-shadow: 0 1px 2px rgba(15,13,46,0.04);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid #E7E5ED;
+}
+
+.toolbarLabel {
+  color: #6B6890;
+  font-size: 13px;
+}
+
+.toolbarLabel strong {
+  color: #0F0D2E;
+  font-weight: 500;
+}
+
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  background: #F8F7F4;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid #E7E5ED;
+}
+
+.segButton {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #6B6890;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.segButtonActive {
+  composes: segButton;
+  background: #FFFFFF;
+  color: #0F0D2E;
+  box-shadow: 0 1px 2px rgba(15,13,46,0.04);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead th {
+  text-align: left;
+  padding: 10px 24px;
+  font-family: "Geist Mono", ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6B6890;
+  font-weight: 500;
+  background: #F8F7F4;
+  border-bottom: 1px solid #E7E5ED;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #EFEDF2;
+  transition: background 0.12s ease;
+  cursor: pointer;
+}
+
+.table tbody tr:hover {
+  background: #F8F7F4;
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.selected {
+  background: #EEF0FE !important;
+}
+
+.table td {
+  padding: 14px 24px;
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+.dimCode {
+  font-family: "Geist Mono", ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  padding: 3px 7px;
+  background: #1E1B4B;
+  color: #FFFFFF;
+  border-radius: 5px;
+  margin-right: 10px;
+  letter-spacing: 0.04em;
+}
+
+.dimName {
+  font-weight: 500;
+  color: #0F0D2E;
+}
+
+.selectedChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  background: #EEF0FE;
+  color: #4F46E5;
+  border-radius: 99px;
+  font-size: 10px;
+  font-family: "Geist Mono", ui-monospace, Menlo, monospace;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.scoreCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 200px;
+}
+
+.scoreNum {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  min-width: 44px;
+}
+
+.scoreBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: #EFEDF2;
+  overflow: hidden;
+  max-width: 120px;
+}
+
+.scoreBar > span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.25s ease;
+}
+
+.weightCell {
+  width: 110px;
+  color: #3B3866;
+  font-variant-numeric: tabular-nums;
+}
+
+.weightBar {
+  display: inline-block;
+  width: 60px;
+  height: 4px;
+  border-radius: 99px;
+  background: #EFEDF2;
+  vertical-align: middle;
+  margin-right: 8px;
+  overflow: hidden;
+}
+
+.weightBar > span {
+  display: block;
+  height: 100%;
+  background: #4F46E5;
+}
+
+.plazoCell {
+  font-family: "Geist Mono", ui-monospace, Menlo, monospace;
+  font-size: 12px;
+  color: #3B3866;
+}
+
+@media (max-width: 720px) {
+  .table thead {
+    display: none;
+  }
+  .table td {
+    padding: 10px 16px;
+  }
+}

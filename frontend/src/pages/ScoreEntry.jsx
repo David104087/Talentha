@@ -5,14 +5,14 @@ import { getSemaforo, LEVEL_STYLES } from '../constants/levels'
 import '../styles/score-entry.css'
 
 const INITIAL_DIMS = [
-  { id: 'D1', name: 'Controles Críticos y Condiciones del Área',       weight: 16, score: 36.4 },
-  { id: 'D2', name: 'Planeación y Arranque Seguro del Trabajo',         weight: 13, score: 32.5 },
-  { id: 'D3', name: 'Cumplimiento y Exigencia de Reglas',               weight: 14, score: 36.4 },
-  { id: 'D4', name: 'Detención de Trabajos Inseguros (Stop Work)',      weight: 18, score: 32.5 },
-  { id: 'D5', name: 'Aprendizaje de Incidentes',                        weight: 11, score: 32.5 },
-  { id: 'D6', name: 'Participación y Clima de Seguridad',               weight:  9, score: 32.5 },
-  { id: 'D7', name: 'Liderazgo Visible y Coherente',                    weight: 12, score: 68.0 },
-  { id: 'D8', name: 'Gestión de Fatiga y Factores Humanos',             weight:  7, score: 82.0 },
+  { id: 'D1', nombre: 'Controles Críticos y Condiciones del Área',       peso: 16, score: 36.4 },
+  { id: 'D2', nombre: 'Planeación y Arranque Seguro del Trabajo',         peso: 13, score: 32.5 },
+  { id: 'D3', nombre: 'Cumplimiento y Exigencia de Reglas',               peso: 14, score: 36.4 },
+  { id: 'D4', nombre: 'Detención de Trabajos Inseguros (Stop Work)',      peso: 18, score: 32.5 },
+  { id: 'D5', nombre: 'Aprendizaje de Incidentes',                        peso: 11, score: 32.5 },
+  { id: 'D6', nombre: 'Participación y Clima de Seguridad',               peso:  9, score: 32.5 },
+  { id: 'D7', nombre: 'Liderazgo Visible y Coherente',                    peso: 12, score: 68.0 },
+  { id: 'D8', nombre: 'Gestión de Fatiga y Factores Humanos',             peso:  7, score: 82.0 },
 ]
 
 const SUPERVISOR = {
@@ -32,7 +32,7 @@ function DimRow({ dim, onChange, onReset, hasError }) {
     <tr className={hasError ? 'error' : ''}>
       <td>
         <span className="dim-code">{dim.id}</span>
-        <span className="dim-name">{dim.name}</span>
+        <span className="dim-name">{dim.nombre}</span>
       </td>
 
       <td className="input-cell">
@@ -67,9 +67,9 @@ function DimRow({ dim, onChange, onReset, hasError }) {
             min="0"
             max="100"
             step="1"
-            value={dim.weight}
+            value={dim.peso}
             onChange={e =>
-              onChange({ weight: e.target.value === '' ? '' : Number(e.target.value) })
+              onChange({ peso: e.target.value === '' ? '' : Number(e.target.value) })
             }
             aria-label={`Peso ${dim.id}`}
           />
@@ -97,15 +97,15 @@ export default function ScoreEntry() {
   const [error, setError] = useState(null)
   const [submitted, setSubmitted] = useState(false)
 
-  const totalWeight = useMemo(
-    () => dims.reduce((sum, d) => sum + (Number(d.weight) || 0), 0),
+  const totalPeso = useMemo(
+    () => dims.reduce((sum, d) => sum + (Number(d.peso) || 0), 0),
     [dims]
   )
 
   const ipraPreview = useMemo(() => {
-    const tp = totalWeight || 1
-    return dims.reduce((sum, d) => sum + (Number(d.score) || 0) * (Number(d.weight) || 0), 0) / tp
-  }, [dims, totalWeight])
+    const tp = totalPeso || 1
+    return dims.reduce((sum, d) => sum + (Number(d.score) || 0) * (Number(d.peso) || 0), 0) / tp
+  }, [dims, totalPeso])
 
   const globalLevel = getSemaforo(ipraPreview)
 
@@ -114,17 +114,17 @@ export default function ScoreEntry() {
     dims.forEach(d => {
       if (d.score === '' || Number(d.score) < 0 || Number(d.score) > 100)
         errs[d.id + '_score'] = true
-      if (d.weight === '' || Number(d.weight) < 0 || Number(d.weight) > 100)
-        errs[d.id + '_weight'] = true
+      if (d.peso === '' || Number(d.peso) < 0 || Number(d.peso) > 100)
+        errs[d.id + '_peso'] = true
     })
-    if (Math.abs(totalWeight - 100) > 0.5) errs.total = true
+    if (Math.abs(totalPeso - 100) > 0.5) errs.total = true
     return errs
-  }, [dims, totalWeight])
+  }, [dims, totalPeso])
 
   const isValid = Object.keys(errors).length === 0
 
   function hasRowError(id) {
-    return !!(errors[id + '_score'] || errors[id + '_weight'])
+    return !!(errors[id + '_score'] || errors[id + '_peso'])
   }
 
   function updateDim(index, patch) {
@@ -143,7 +143,7 @@ export default function ScoreEntry() {
 
   function distributeWeights() {
     const even = Math.round((100 / dims.length) * 10) / 10
-    setDims(prev => prev.map(d => ({ ...d, weight: even })))
+    setDims(prev => prev.map(d => ({ ...d, peso: even })))
   }
 
   async function handleSubmit() {
@@ -156,11 +156,11 @@ export default function ScoreEntry() {
     setError(null)
     try {
       const result = await generatePlan({
-        supervisorName: 'Sofia Moreno',
+        nombreSupervisor: 'Sofia Moreno',
         scores: dims.map(d => ({
           id: d.id,
-          name: d.name,
-          weight: Number(d.weight),
+          nombre: d.nombre,
+          peso: Number(d.peso),
           score: Number(d.score),
         })),
       })
@@ -301,14 +301,14 @@ export default function ScoreEntry() {
                 <td>
                   <strong
                     style={{
-                      color: Math.abs(totalWeight - 100) > 0.5 ? '#B91C1C' : '#059669',
+                      color: Math.abs(totalPeso - 100) > 0.5 ? '#B91C1C' : '#059669',
                     }}
                   >
-                    {totalWeight}%
+                    {totalPeso}%
                   </strong>
                 </td>
                 <td className="muted">
-                  {Math.abs(totalWeight - 100) > 0.5
+                  {Math.abs(totalPeso - 100) > 0.5
                     ? '⚠ Los pesos deben sumar exactamente 100%'
                     : '✓ Listo para generar'}
                 </td>

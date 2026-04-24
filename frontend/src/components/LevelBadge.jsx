@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 import { LEVEL_STYLES } from '../constants/levels'
 
 export default function LevelBadge({ level, size = 'md' }) {
-  const s = LEVEL_STYLES[level] || LEVEL_STYLES['moderate']
+  const s = LEVEL_STYLES[level] || LEVEL_STYLES['moderado']
   return (
     <span
       className="level-badge"
@@ -21,6 +21,6 @@ export default function LevelBadge({ level, size = 'md' }) {
 }
 
 LevelBadge.propTypes = {
-  level: PropTypes.oneOf(['critical', 'high', 'moderate', 'low']).isRequired,
+  level: PropTypes.oneOf(['critico', 'alto', 'moderado', 'bajo']).isRequired,
   size: PropTypes.oneOf(['sm', 'md']),
 }

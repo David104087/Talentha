@@ -14,22 +14,24 @@ class InterventionPlanView(APIView):
     """
     POST /api/plan-intervencion/
 
-    Body: { "supervisor_name": str, "scores": [ {"id", "name", "weight", "score"}, ... ] }
-    Returns the full intervention plan.
+    Body (contrato en español, según sección 2.1 del enunciado):
+      { "nombre_supervisor": str, "scores": [ {id, nombre, peso, score}, ... ] }
+
+    Devuelve el plan de intervención completo (supervisor, ipra_global, resumen, planes).
 
     GET /api/plan-intervencion/
-    Returns demo plan for Sofia Moreno.
+    Retorna el plan demo de Sofía Moreno.
     """
 
     DEMO_SCORES = [
-        {"id": "D1", "name": "Controles Críticos y Condiciones del Área",       "weight": 16, "score": 36.4},
-        {"id": "D2", "name": "Planeación y Arranque Seguro del Trabajo",         "weight": 13, "score": 32.5},
-        {"id": "D3", "name": "Cumplimiento y Exigencia de Reglas",               "weight": 14, "score": 36.4},
-        {"id": "D4", "name": "Detención de Trabajos Inseguros (Stop Work)",      "weight": 18, "score": 32.5},
-        {"id": "D5", "name": "Aprendizaje de Incidentes",                        "weight": 11, "score": 32.5},
-        {"id": "D6", "name": "Participación y Clima de Seguridad",               "weight":  9, "score": 32.5},
-        {"id": "D7", "name": "Liderazgo Visible y Coherente",                    "weight": 12, "score": 68.0},
-        {"id": "D8", "name": "Gestión de Fatiga y Factores Humanos",             "weight":  7, "score": 82.0},
+        {"id": "D1", "nombre": "Controles Críticos y Condiciones del Área",       "peso": 16, "score": 36.4},
+        {"id": "D2", "nombre": "Planeación y Arranque Seguro del Trabajo",         "peso": 13, "score": 32.5},
+        {"id": "D3", "nombre": "Cumplimiento y Exigencia de Reglas",               "peso": 14, "score": 36.4},
+        {"id": "D4", "nombre": "Detención de Trabajos Inseguros (Stop Work)",      "peso": 18, "score": 32.5},
+        {"id": "D5", "nombre": "Aprendizaje de Incidentes",                        "peso": 11, "score": 32.5},
+        {"id": "D6", "nombre": "Participación y Clima de Seguridad",               "peso":  9, "score": 32.5},
+        {"id": "D7", "nombre": "Liderazgo Visible y Coherente",                    "peso": 12, "score": 68.0},
+        {"id": "D8", "nombre": "Gestión de Fatiga y Factores Humanos",             "peso":  7, "score": 82.0},
     ]
 
     def get(self, request):
@@ -37,27 +39,27 @@ class InterventionPlanView(APIView):
         return Response(plan)
 
     def post(self, request):
-        supervisor_name = request.data.get("supervisor_name", "").strip()
+        nombre_supervisor = request.data.get("nombre_supervisor", "").strip()
         scores = request.data.get("scores", [])
 
-        if not supervisor_name:
+        if not nombre_supervisor:
             return Response(
-                {"error": "'supervisor_name' is required."},
+                {"error": "'nombre_supervisor' es obligatorio."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if not scores or len(scores) != 8:
             return Response(
-                {"error": "'scores' must contain exactly 8 dimensions."},
+                {"error": "'scores' debe contener exactamente 8 dimensiones."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        required_keys = {"id", "name", "weight", "score"}
+        claves_requeridas = {"id", "nombre", "peso", "score"}
         for dim in scores:
-            if not required_keys.issubset(dim.keys()):
+            if not claves_requeridas.issubset(dim.keys()):
                 return Response(
-                    {"error": f"Each score must have keys: {required_keys}"},
+                    {"error": f"Cada dimensión debe tener las claves: {sorted(claves_requeridas)}"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        plan = generar_plan_intervencion(scores, supervisor_name)
+        plan = generar_plan_intervencion(scores, nombre_supervisor)
         return Response(plan, status=status.HTTP_200_OK)

@@ -1,113 +1,238 @@
+import { useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { LEVEL_STYLES } from '../constants/levels'
+import { LEVEL_STYLES, getSemaforo } from '../constants/levels'
+import { generarPlanIntervencion } from '../lib/generarPlan'
 import LevelBadge from './LevelBadge'
+import TablaResumenIPRA from './TablaResumenIPRA'
+import styles from './PlanIntervencion.module.css'
 
-const IconClock = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-)
+/**
+ * Componente principal — Parte 2 del enunciado.
+ *
+ * Firma esperada por el enunciado (§2.2):
+ *   <PlanIntervencion supervisor="Sofia Moreno" scores={[...]} />
+ *
+ * El enunciado también admite recibir el output ya procesado de la función
+ * Python (`plan` prop). Cualquiera de los dos modos funciona.
+ *
+ * Contenido renderizado (según §2.2):
+ *   1. Indicador del IPRA global con color de semáforo.
+ *   2. Tabla resumen con 8 dimensiones (score, nivel, peso, plazo).
+ *   3. Planes detallados (máx. 4) con 3 subsecciones:
+ *      "Para el supervisor" · "Para el jefe directo" · "Para el sistema / organización".
+ */
+export default function PlanIntervencion({
+  supervisor,
+  scores,
+  plan: planProp,
+  selectedId,
+  onSelect,
+  showIpraIndicator = true,
+}) {
+  // Modo 1: recibimos scores + supervisor → generamos el plan aquí.
+  // Modo 2: recibimos `plan` ya procesado (p. ej. desde el backend).
+  const plan = useMemo(() => {
+    if (planProp) return planProp
+    if (!scores || !supervisor) return null
+    return generarPlanIntervencion(scores, supervisor)
+  }, [planProp, scores, supervisor])
 
-const IconKpi = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-    <polyline points="17 6 23 6 23 12" />
-  </svg>
-)
+  if (!plan) return null
 
-function PlanCard({ plan, summaryDim, rank, highlighted }) {
-  const level = plan.level
-  const s = LEVEL_STYLES[level] || LEVEL_STYLES['moderate']
+  const nivelGlobal = getSemaforo(plan.ipra_global)
+  const estiloGlobal = LEVEL_STYLES[nivelGlobal]
+  const highlightId = selectedId || plan.planes[0]?.id
 
   return (
-    <article
-      className="plan-card"
-      style={
-        highlighted
-          ? { boxShadow: '0 0 0 2px #4F46E5, 0 20px 48px rgba(79,70,229,0.12)' }
-          : undefined
-      }
-    >
-      <header className="plan-head">
-        <div className="plan-head-top">
-          <span className="pcode">{plan.id}</span>
-          <span>PRIORIDAD</span>
-          <span className="priority">#{rank} de 8</span>
+    <div className={styles.container}>
+      {showIpraIndicator && (
+        <IpraGlobalBanner
+          valor={plan.ipra_global}
+          estilo={estiloGlobal}
+          supervisor={plan.supervisor}
+        />
+      )}
+
+      <TablaResumenIPRA
+        dimensions={plan.resumen}
+        selectedId={highlightId}
+        onSelect={onSelect}
+        defaultSort="prioridad"
+      />
+
+      <div className={styles.cards}>
+        {plan.planes.map((p, i) => (
+          <PlanCard
+            key={p.id}
+            plan={p}
+            resumenDim={plan.resumen.find(d => d.id === p.id)}
+            rank={i + 1}
+            highlighted={highlightId === p.id}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+PlanIntervencion.propTypes = {
+  /** Nombre del supervisor evaluado (requerido si no pasas `plan`). */
+  supervisor: PropTypes.string,
+  /** Scores crudos por dimensión (requerido si no pasas `plan`). */
+  scores: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      nombre: PropTypes.string.isRequired,
+      peso: PropTypes.number.isRequired,
+      score: PropTypes.number.isRequired,
+    })
+  ),
+  /** Output ya procesado de generar_plan_intervencion (opcional). */
+  plan: PropTypes.shape({
+    supervisor: PropTypes.string.isRequired,
+    ipra_global: PropTypes.number.isRequired,
+    resumen: PropTypes.array.isRequired,
+    planes: PropTypes.array.isRequired,
+  }),
+  /** Id de la dimensión resaltada en la tabla y en los planes. */
+  selectedId: PropTypes.string,
+  /** Callback cuando el usuario selecciona una fila de la tabla. */
+  onSelect: PropTypes.func,
+  /** Mostrar el banner interno de IPRA global. true por defecto (requisito §2.2).
+   *  Se puede desactivar cuando el contenedor ya provee su propio indicador. */
+  showIpraIndicator: PropTypes.bool,
+}
+
+// ---------------------------------------------------------------------------
+// IPRA Global banner
+// ---------------------------------------------------------------------------
+
+function IpraGlobalBanner({ valor, estilo, supervisor }) {
+  const circ = 2 * Math.PI * 44
+  const pct = Math.max(0, Math.min(100, valor)) / 100
+
+  return (
+    <div className={styles.iprabox} style={{ borderColor: estilo.ring }}>
+      <div className={styles.dial} aria-label={`IPRA global ${valor}`}>
+        <svg viewBox="0 0 110 110">
+          <circle className={styles.dialTrack} cx="55" cy="55" r="44" />
+          <circle
+            className={styles.dialFill}
+            cx="55"
+            cy="55"
+            r="44"
+            style={{
+              stroke: estilo.fg,
+              strokeDasharray: circ,
+              strokeDashoffset: circ * (1 - pct),
+            }}
+          />
+        </svg>
+        <div className={styles.dialNum} style={{ color: estilo.fg }}>
+          {valor.toFixed(1)}
         </div>
-        <h3 className="plan-title">
-          {summaryDim ? summaryDim.name : plan.id}
+      </div>
+
+      <div className={styles.iprainfo}>
+        <div className={styles.eyebrow}>IPRA GLOBAL</div>
+        <h3>Índice Predictivo de Riesgo en Seguridad</h3>
+        <span
+          className={styles.levelChip}
+          style={{ background: estilo.bg, color: estilo.fg }}
+        >
+          <span className={styles.levelChipBullet} />
+          Nivel {estilo.label}
+        </span>
+        <p>Σ(score × peso / 100) sobre las 8 dimensiones — ponderado por metodología.</p>
+      </div>
+
+      <div className={styles.supervisorCol}>
+        <strong>{supervisor}</strong>
+        SUP-00247 · Q1 2026
+      </div>
+    </div>
+  )
+}
+
+IpraGlobalBanner.propTypes = {
+  valor: PropTypes.number.isRequired,
+  estilo: PropTypes.object.isRequired,
+  supervisor: PropTypes.string.isRequired,
+}
+
+// ---------------------------------------------------------------------------
+// Plan card
+// ---------------------------------------------------------------------------
+
+function PlanCard({ plan, resumenDim, rank, highlighted }) {
+  const s = LEVEL_STYLES[plan.nivel] || LEVEL_STYLES['moderado']
+
+  return (
+    <article className={`${styles.card} ${highlighted ? styles.highlighted : ''}`}>
+      <header className={styles.head}>
+        <div className={styles.headTop}>
+          <span className={styles.pcode}>{plan.id}</span>
+          <span>PRIORIDAD</span>
+          <span className={styles.priority}>#{rank} de 8</span>
+        </div>
+        <h3 className={styles.title}>
+          {resumenDim ? resumenDim.nombre : plan.id}
         </h3>
-        <div className="plan-meta">
-          <LevelBadge level={level} size="sm" />
+        <div className={styles.meta}>
+          <LevelBadge level={plan.nivel} size="sm" />
           <span
-            className="pill plazo"
+            className={`${styles.pill} ${styles.pillPlazo}`}
             style={{ background: s.bg, color: s.fg }}
           >
-            <IconClock /> {s.deadline}
+            {s.plazo}
           </span>
-          {summaryDim && (
+          {resumenDim && (
             <>
-              <span className="pill">Score {summaryDim.score.toFixed(1)}</span>
-              <span className="pill">Peso {summaryDim.weight}%</span>
+              <span className={styles.pill}>Score {resumenDim.score.toFixed(1)}</span>
+              <span className={styles.pill}>Peso {resumenDim.peso}%</span>
             </>
           )}
         </div>
       </header>
 
-      <div className="plan-body">
-        <div className="role-block">
-          <div className="role-head">
-            <span className="role-icon supervisor">SV</span>
-            <span className="role-title">Acciones para el Supervisor</span>
-            <span className="role-sub">{plan.supervisor.length} acciones</span>
+      <div className={styles.body}>
+        <div className={styles.roleBlock}>
+          <div className={styles.roleHead}>
+            <span className={styles.roleIconSupervisor}>SV</span>
+            <span className={styles.roleTitle}>Para el supervisor</span>
+            <span className={styles.roleSub}>{plan.supervisor.length} acciones</span>
           </div>
-          <ul className="role-list supervisor">
-            {plan.supervisor.map((action, i) => (
-              <li key={i}>{action}</li>
-            ))}
+          <ul className={`${styles.roleList} ${styles.roleListSupervisor}`}>
+            {plan.supervisor.map((a, i) => <li key={i}>{a}</li>)}
           </ul>
         </div>
 
-        <div className="role-block">
-          <div className="role-head">
-            <span className="role-icon jefe">JD</span>
-            <span className="role-title">Acciones para el Jefe Directo</span>
-            <span className="role-sub">{plan.manager.length} acciones</span>
+        <div className={styles.roleBlock}>
+          <div className={styles.roleHead}>
+            <span className={styles.roleIconJefe}>JD</span>
+            <span className={styles.roleTitle}>Para el jefe directo</span>
+            <span className={styles.roleSub}>{plan.jefe.length} acciones</span>
           </div>
-          <ul className="role-list jefe">
-            {plan.manager.map((action, i) => (
-              <li key={i}>{action}</li>
-            ))}
+          <ul className={`${styles.roleList} ${styles.roleListJefe}`}>
+            {plan.jefe.map((a, i) => <li key={i}>{a}</li>)}
           </ul>
         </div>
 
-        <div className="role-block">
-          <div className="role-head">
-            <span className="role-icon sistema">SI</span>
-            <span className="role-title">Acciones para el Sistema / Organización</span>
-            <span className="role-sub">{plan.system.length} acciones</span>
+        <div className={styles.roleBlock}>
+          <div className={styles.roleHead}>
+            <span className={styles.roleIconSistema}>SI</span>
+            <span className={styles.roleTitle}>Para el sistema / organización</span>
+            <span className={styles.roleSub}>{plan.sistema.length} acciones</span>
           </div>
-          <ul className="role-list sistema">
-            {plan.system.map((action, i) => (
-              <li key={i}>{action}</li>
-            ))}
+          <ul className={`${styles.roleList} ${styles.roleListSistema}`}>
+            {plan.sistema.map((a, i) => <li key={i}>{a}</li>)}
           </ul>
         </div>
       </div>
 
-      <footer className="plan-foot">
-        <div className="kpi-label">
-          <IconKpi /> Indicadores de seguimiento
-        </div>
-        <div className="kpi-list">
-          {plan.kpis.map((kpi, i) => (
-            <span key={i}>
-              {i > 0 && <span> · </span>}
-              {kpi}
-            </span>
-          ))}
-        </div>
+      <footer className={styles.foot}>
+        <div className={styles.footLabel}>Indicadores de seguimiento</div>
+        <div className={styles.footKpi}>{plan.kpi}</div>
       </footer>
     </article>
   )
@@ -116,46 +241,13 @@ function PlanCard({ plan, summaryDim, rank, highlighted }) {
 PlanCard.propTypes = {
   plan: PropTypes.shape({
     id: PropTypes.string.isRequired,
-    level: PropTypes.string.isRequired,
+    nivel: PropTypes.oneOf(['critico', 'alto', 'moderado', 'bajo']).isRequired,
     supervisor: PropTypes.arrayOf(PropTypes.string).isRequired,
-    manager: PropTypes.arrayOf(PropTypes.string).isRequired,
-    system: PropTypes.arrayOf(PropTypes.string).isRequired,
-    kpis: PropTypes.arrayOf(PropTypes.string).isRequired,
+    jefe: PropTypes.arrayOf(PropTypes.string).isRequired,
+    sistema: PropTypes.arrayOf(PropTypes.string).isRequired,
+    kpi: PropTypes.string.isRequired,
   }).isRequired,
-  summaryDim: PropTypes.object,
+  resumenDim: PropTypes.object,
   rank: PropTypes.number.isRequired,
   highlighted: PropTypes.bool,
-}
-
-export default function PlanIntervencion({ plans, summary, highlightedId }) {
-  const summaryMap = Object.fromEntries((summary || []).map(d => [d.id, d]))
-
-  return (
-    <div className="plans">
-      {plans.map((plan, i) => (
-        <PlanCard
-          key={plan.id}
-          plan={plan}
-          summaryDim={summaryMap[plan.id]}
-          rank={i + 1}
-          highlighted={highlightedId === plan.id}
-        />
-      ))}
-    </div>
-  )
-}
-
-PlanIntervencion.propTypes = {
-  plans: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      level: PropTypes.string.isRequired,
-      supervisor: PropTypes.arrayOf(PropTypes.string).isRequired,
-      manager: PropTypes.arrayOf(PropTypes.string).isRequired,
-      system: PropTypes.arrayOf(PropTypes.string).isRequired,
-      kpis: PropTypes.arrayOf(PropTypes.string).isRequired,
-    })
-  ).isRequired,
-  summary: PropTypes.array.isRequired,
-  highlightedId: PropTypes.string,
 }

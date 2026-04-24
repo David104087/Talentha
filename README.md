@@ -3,6 +3,10 @@
 Implementación full-stack del motor de planes de intervención IPRA.
 **Stack:** Django REST Framework (backend) + React + Vite (frontend).
 
+El contrato JSON sigue literalmente la sección **2.1** del enunciado: claves en
+español (`nombre`, `peso`, `nivel`, `plazo`, `prioridad_orden`, `jefe`, `sistema`,
+`kpi`), niveles `critico | alto | moderado | bajo` y `kpi` como string.
+
 ---
 
 ## Estructura del proyecto
@@ -11,24 +15,31 @@ Implementación full-stack del motor de planes de intervención IPRA.
 talentha/
 ├── backend/
 │   ├── plan_intervencion.py        # Python puro: generar_plan_intervencion, get_semaforo, calcular_ipra_global
-│   ├── planes_contenido.py         # Contenido de acciones para D4-crítico y D1-crítico
-│   ├── test_plan_intervencion.py   # Tests unitarios (18 tests, unittest de stdlib)
+│   ├── planes_contenido.py         # Contenido real para D4-critico y D1-critico
+│   ├── test_plan_intervencion.py   # Tests unitarios (29 tests, unittest de stdlib)
 │   ├── manage.py
 │   ├── requirements.txt
 │   ├── talentha/                   # Proyecto Django
 │   │   ├── settings.py
 │   │   └── urls.py
-│   └── ipra/                       # App Django
+│   └── ipra/                       # App Django (Bonus A)
 │       ├── views.py                # InterventionPlanView (APIView de DRF)
 │       └── urls.py
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
-│   │   │   ├── ScoreEntry.jsx        # Pantalla 1 — formulario de ingreso de scores
+│   │   │   ├── ScoreEntry.jsx        # Pantalla 1 — ingreso de scores
 │   │   │   └── InterventionPlan.jsx  # Pantalla 2 — visualización del plan
-│   │   └── components/
-│   │       ├── PlanIntervencion.jsx  # Componente de tarjetas del plan
-│   │       └── TablaResumenIPRA.jsx  # Tabla resumen (Bonus B, con propTypes)
+│   │   ├── components/
+│   │   │   ├── PlanIntervencion.jsx      # Componente principal §2.2 (CSS Module)
+│   │   │   ├── PlanIntervencion.module.css
+│   │   │   ├── TablaResumenIPRA.jsx      # Bonus B — reutilizable con propTypes
+│   │   │   ├── TablaResumenIPRA.module.css
+│   │   │   └── LevelBadge.jsx
+│   │   ├── lib/
+│   │   │   └── generarPlan.js      # Port JS del backend (usado por <PlanIntervencion scores />)
+│   │   └── constants/
+│   │       └── levels.js           # Colores EXACTOS del semáforo (§2.2)
 │   ├── package.json
 │   └── vite.config.js
 ├── arquitectura.md                 # Respuesta de arquitectura (Parte 3) + Bonus C
@@ -50,11 +61,11 @@ python manage.py migrate
 python manage.py runserver        # → http://localhost:8000
 ```
 
-El endpoint del API está disponible en:
-- `GET  http://localhost:8000/api/plan-intervencion/` — devuelve un plan demo (Sofía Moreno)
-- `POST http://localhost:8000/api/plan-intervencion/` — genera un plan a partir de los scores enviados
+Endpoints disponibles:
+- `GET  http://localhost:8000/api/plan-intervencion/` — plan demo (Sofía Moreno)
+- `POST http://localhost:8000/api/plan-intervencion/` — genera el plan a partir de scores
 
-### Correr los tests unitarios (standalone, sin Django)
+### Tests unitarios (standalone, sin Django)
 
 ```bash
 cd backend
@@ -69,64 +80,70 @@ npm install
 npm run dev                       # → http://localhost:5173
 ```
 
-> Vite proxea las peticiones `/api/*` a `http://localhost:8000`, así el frontend y el backend pueden correr en paralelo sin problemas de CORS en desarrollo.
+> Vite proxea `/api/*` a `http://localhost:8000`, así front y back corren en paralelo sin CORS en desarrollo.
 
 ---
 
-## Contrato del API
+## Contrato del API (contrato del enunciado §2.1)
 
 ### POST `/api/plan-intervencion/`
 
-**Body de la petición:**
+**Request body:**
 ```json
 {
-  "supervisor_name": "Sofia Moreno",
+  "nombre_supervisor": "Sofia Moreno",
   "scores": [
-    {"id": "D1", "name": "Controles Críticos y Condiciones del Área",  "weight": 16, "score": 36.4},
-    {"id": "D2", "name": "Planeación y Arranque Seguro del Trabajo",   "weight": 13, "score": 32.5},
-    {"id": "D3", "name": "Cumplimiento y Exigencia de Reglas",         "weight": 14, "score": 36.4},
-    {"id": "D4", "name": "Detención de Trabajos Inseguros (Stop Work)","weight": 18, "score": 32.5},
-    {"id": "D5", "name": "Aprendizaje de Incidentes",                  "weight": 11, "score": 32.5},
-    {"id": "D6", "name": "Participación y Clima de Seguridad",         "weight":  9, "score": 32.5},
-    {"id": "D7", "name": "Liderazgo Visible y Coherente",              "weight": 12, "score": 68.0},
-    {"id": "D8", "name": "Gestión de Fatiga y Factores Humanos",       "weight":  7, "score": 82.0}
+    {"id": "D1", "nombre": "Controles Críticos y Condiciones del Área",  "peso": 16, "score": 36.4},
+    {"id": "D2", "nombre": "Planeación y Arranque Seguro del Trabajo",   "peso": 13, "score": 32.5},
+    {"id": "D3", "nombre": "Cumplimiento y Exigencia de Reglas",         "peso": 14, "score": 36.4},
+    {"id": "D4", "nombre": "Detención de Trabajos Inseguros (Stop Work)","peso": 18, "score": 32.5},
+    {"id": "D5", "nombre": "Aprendizaje de Incidentes",                  "peso": 11, "score": 32.5},
+    {"id": "D6", "nombre": "Participación y Clima de Seguridad",         "peso":  9, "score": 32.5},
+    {"id": "D7", "nombre": "Liderazgo Visible y Coherente",              "peso": 12, "score": 68.0},
+    {"id": "D8", "nombre": "Gestión de Fatiga y Factores Humanos",       "peso":  7, "score": 82.0}
   ]
 }
 ```
 
-**Respuesta:**
+**Response:**
 ```json
 {
   "supervisor": "Sofia Moreno",
   "ipra_global": 41.4,
-  "summary": [...],   // las 8 dimensiones con nivel, plazo y priority_order
-  "plans": [...]      // máx. 4: primero críticas (por peso DESC), luego altas (por peso DESC)
+  "resumen": [
+    {"id": "D4", "nombre": "...", "score": 32.5, "peso": 18, "nivel": "critico", "plazo": "0-15 dias", "prioridad_orden": 1}
+  ],
+  "planes": [
+    {"id": "D4", "nivel": "critico", "supervisor": ["..."], "jefe": ["..."], "sistema": ["..."], "kpi": "Indicador 1 · Indicador 2"}
+  ]
 }
 ```
 
 ---
 
-## Referencia de niveles de riesgo
+## Referencia de niveles de riesgo (§1)
 
 | Score | Nivel | Código | Plazo |
 |---|---|---|---|
-| 0 – 64 | Crítico | `critical` | 0–15 días |
-| 65 – 74 | Alto | `high` | 15–30 días |
-| 75 – 84 | Moderado | `moderate` | 30–60 días |
-| ≥ 85 | Bajo | `low` | Sostenimiento |
+| 0 – 64  | Crítico  | `critico`  | `0-15 dias`   |
+| 65 – 74 | Alto     | `alto`     | `15-30 dias`  |
+| 75 – 84 | Moderado | `moderado` | `30-60 dias`  |
+| ≥ 85    | Bajo     | `bajo`     | `Sostenimiento` |
 
 ---
 
-## Datos de prueba — resultados esperados
+## Datos de prueba — resultados esperados (§4.3)
 
-Input: los scores de Sofía Moreno (ver arriba).
+Input: los scores de Sofía Moreno.
 
-| Verificación | Valor esperado |
+| Verificación | Valor obtenido |
 |---|---|
-| IPRA global | 41.4 |
-| Planes generados | 4: D4, D1, D3, D2 (todas críticas) |
+| `ipra_global` | **41.4** |
+| `len(planes)` | 4 |
+| Orden de `planes` | D4 → D1 → D3 → D2 (todas críticas) |
 | Primer plan | D4 — Stop Work (mayor peso: 18%) |
-| Nivel de D7 | `high` (score 68.0) — aparece solo en el resumen |
-| Nivel de D8 | `moderate` (score 82.0) — no genera plan |
+| D7 en `resumen` | `nivel: "alto"` (score 68.0) |
+| D8 en `planes` | No — `nivel: "moderado"` (score 82.0) |
+| Tests unitarios | 29/29 PASS |
 
-> **Nota sobre el IPRA esperado:** el spec indica 40.2 pero la fórmula declarada `Σ(score_i × peso_i / 100)` con los datos del enunciado da `41.395 ≈ 41.4`. La implementación respeta la fórmula del spec, por lo que el valor correcto es **41.4**. El "40.2" del documento es un error de cálculo en el enunciado.
+> **Nota sobre IPRA esperado 40.2:** aplicando literalmente la fórmula del spec `Σ(score_i × peso_i / 100)` con los datos del §4.3 se obtiene `5.824 + 4.225 + 5.096 + 5.85 + 3.575 + 2.925 + 8.16 + 5.74 = 41.395 ≈ 41.4`. El enunciado (§4.3) indica 40.2 pero es un error aritmético del documento; la implementación respeta la fórmula declarada y produce **41.4**.

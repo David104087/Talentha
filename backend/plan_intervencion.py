@@ -1,196 +1,187 @@
 """
-IPRA (Índice Predictivo de Riesgo en Seguridad) — Intervention Plan Generator.
+IPRA (Índice Predictivo de Riesgo en Seguridad) — Generador de planes de intervención.
 
-Standalone module; run directly or imported from the Django app.
+Módulo de Python puro; se puede ejecutar standalone o importar desde la app Django.
+
+Contrato (en español, según sección 2.1 del enunciado):
+
+Input:
+    scores = [ {id, nombre, peso, score}, ... ]
+    nombre_supervisor = str
+
+Output:
+    {
+      "supervisor": str,
+      "ipra_global": float,
+      "resumen": [ {id, nombre, score, peso, nivel, plazo, prioridad_orden}, ... ],
+      "planes":  [ {id, nivel, supervisor, jefe, sistema, kpi}, ... ]
+    }
+
+Niveles: 'critico' | 'alto' | 'moderado' | 'bajo'
 """
 
 from planes_contenido import PLAN_CONTENT
 
 # ---------------------------------------------------------------------------
-# Risk thresholds
+# Constantes de niveles de riesgo
 # ---------------------------------------------------------------------------
 
-_LEVEL_ORDER = {"critical": 0, "high": 1, "moderate": 2, "low": 3}
+_ORDEN_NIVEL = {"critico": 0, "alto": 1, "moderado": 2, "bajo": 3}
 
-_DEADLINES = {
-    "critical": "0–15 días",
-    "high": "15–30 días",
-    "moderate": "30–60 días",
-    "low": "Sostenimiento",
+_PLAZOS = {
+    "critico": "0-15 dias",
+    "alto": "15-30 dias",
+    "moderado": "30-60 dias",
+    "bajo": "Sostenimiento",
 }
 
 
 # ---------------------------------------------------------------------------
-# Public helpers
+# Helpers públicos
 # ---------------------------------------------------------------------------
 
 
 def get_semaforo(score: float) -> str:
-    """Return the risk level for a given dimension score (0-100).
+    """Devuelve el nivel de riesgo para un score (0-100).
 
-    Ranges:
-        score <  65          → 'critical'
-        65 ≤ score <  75     → 'high'
-        75 ≤ score <  85     → 'moderate'
-        score ≥  85          → 'low'
-
-    Args:
-        score: Numeric score between 0 and 100 (inclusive).
-
-    Returns:
-        One of 'critical', 'high', 'moderate', or 'low'.
+    Rangos:
+        score < 65         → 'critico'
+        65 ≤ score < 75    → 'alto'
+        75 ≤ score < 85    → 'moderado'
+        score ≥ 85         → 'bajo'
     """
     if score < 65:
-        return "critical"
+        return "critico"
     if score < 75:
-        return "high"
+        return "alto"
     if score < 85:
-        return "moderate"
-    return "low"
+        return "moderado"
+    return "bajo"
 
 
-def get_deadline(level: str) -> str:
-    """Return the intervention deadline string for a risk level.
-
-    Args:
-        level: One of 'critical', 'high', 'moderate', 'low'.
-
-    Returns:
-        Human-readable deadline string.
-    """
-    return _DEADLINES[level]
+def get_plazo(nivel: str) -> str:
+    """Devuelve el plazo de intervención para un nivel de riesgo."""
+    return _PLAZOS[nivel]
 
 
 def calcular_ipra_global(scores: list) -> float:
-    """Compute the weighted IPRA global index.
+    """Calcula el IPRA global ponderado.
 
-    Formula: round( Σ(score_i × weight_i / 100), 1 )
+    Fórmula: round( Σ(score_i × peso_i / 100), 1 )
 
     Args:
-        scores: List of dicts, each containing 'score' (float) and
-                'weight' (int/float representing a percentage, e.g. 16 for 16%).
+        scores: Lista de dicts con claves 'score' y 'peso'.
 
     Returns:
-        Rounded global IPRA score (1 decimal place).
+        IPRA global redondeado a 1 decimal.
     """
-    return round(sum(d["score"] * d["weight"] / 100 for d in scores), 1)
+    return round(sum(d["score"] * d["peso"] / 100 for d in scores), 1)
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers
+# Helpers internos
 # ---------------------------------------------------------------------------
 
 
-def _build_plan_actions(dimension_id: str, level: str) -> dict:
-    """Return action content for a dimension/level pair.
+def _construir_acciones(id_dim: str, nivel: str) -> dict:
+    """Obtiene el contenido de acciones para un par (dimensión, nivel).
 
-    Looks up PLAN_CONTENT; generates a placeholder dict when not found.
-
-    Args:
-        dimension_id: Dimension identifier, e.g. 'D4'.
-        level:        Risk level string, e.g. 'critical'.
+    Busca en PLAN_CONTENT; si no encuentra, genera placeholder.
 
     Returns:
-        Dict with keys 'supervisor', 'manager', 'system', 'kpis' (all lists).
+        Dict con claves 'supervisor', 'jefe', 'sistema' (listas) y
+        'kpi' (lista — se une con ' · ' en generar_plan_intervencion).
     """
-    content = PLAN_CONTENT.get((dimension_id, level))
+    content = PLAN_CONTENT.get((id_dim, nivel))
     if content is not None:
         return content
 
-    # Texto placeholder para combinaciones no detalladas en esta versión
     return {
         "supervisor": [
-            f"Acción de intervención para {dimension_id} en nivel {level} — supervisor.",
+            f"Acción de intervención para {id_dim} en nivel {nivel} — supervisor.",
             f"Realizar seguimiento diario con el equipo hasta superar el umbral de riesgo en esta dimensión.",
         ],
-        "manager": [
-            f"Acción de intervención para {dimension_id} en nivel {level} — jefe directo.",
+        "jefe": [
+            f"Acción de intervención para {id_dim} en nivel {nivel} — jefe directo.",
         ],
-        "system": [
-            f"Acción de intervención para {dimension_id} en nivel {level} — sistema / organización.",
+        "sistema": [
+            f"Acción de intervención para {id_dim} en nivel {nivel} — sistema / organización.",
         ],
-        "kpis": [
-            f"% de mejora en el score de {dimension_id} en la próxima evaluación",
+        "kpi": [
+            f"% de mejora en el score de {id_dim} en la próxima evaluación",
             f"Número de acciones correctivas cerradas en el plazo establecido",
         ],
     }
 
 
 # ---------------------------------------------------------------------------
-# Main function
+# Función principal
 # ---------------------------------------------------------------------------
 
 
-def generar_plan_intervencion(scores: list, supervisor_name: str) -> dict:
-    """Generate the full IPRA intervention plan for a supervisor.
+def generar_plan_intervencion(scores: list, nombre_supervisor: str) -> dict:
+    """Genera el plan de intervención IPRA completo para un supervisor.
 
-    Dimensions are classified by risk level, then sorted for the
-    intervention plan: 'critical' first, then 'high', both sorted by
-    weight descending. Only 'critical' and 'high' dimensions enter the
-    plan, and at most 4 dimensions are included.
+    Reglas de ordenamiento de 'planes':
+      1. Primero nivel 'critico', luego 'alto'. 'moderado' y 'bajo' no generan plan.
+      2. Dentro del mismo nivel, por peso DESC.
+      3. Máximo 4 dimensiones en 'planes'.
+      4. ipra_global = Σ(score_i × peso_i / 100).
 
     Args:
-        scores: List of 8 dicts, each with keys:
-                  'id'     (str)   – e.g. 'D1'
-                  'name'   (str)   – dimension display name
-                  'weight' (int)   – percentage weight (0-100)
-                  'score'  (float) – dimension score (0-100)
-        supervisor_name: Full name of the evaluated supervisor.
+        scores: Lista de 8 dicts con claves 'id', 'nombre', 'peso', 'score'.
+        nombre_supervisor: Nombre completo del supervisor evaluado.
 
     Returns:
-        Dict with keys:
-          'supervisor'  – supervisor name
-          'ipra_global' – computed global IPRA score
-          'summary'     – list of dicts (one per dimension) with risk metadata
-          'plans'       – list of up to 4 intervention plan dicts
+        Dict con claves 'supervisor', 'ipra_global', 'resumen', 'planes'.
     """
     ipra_global = calcular_ipra_global(scores)
 
-    # Annotate each dimension with level and deadline
-    annotated = []
+    # Anotar cada dimensión con nivel y plazo
+    anotadas = []
     for d in scores:
-        level = get_semaforo(d["score"])
-        annotated.append({
+        nivel = get_semaforo(d["score"])
+        anotadas.append({
             "id": d["id"],
-            "name": d["name"],
-            "weight": d["weight"],
+            "nombre": d["nombre"],
+            "peso": d["peso"],
             "score": d["score"],
-            "level": level,
-            "deadline": get_deadline(level),
+            "nivel": nivel,
+            "plazo": get_plazo(nivel),
         })
 
-    # Sorting key: level order first, then weight descending (negate for DESC)
-    def sort_key(dim):
-        return (_LEVEL_ORDER[dim["level"]], -dim["weight"])
+    # Orden: nivel primero (crítico → alto → moderado → bajo), luego peso DESC
+    def clave_orden(dim):
+        return (_ORDEN_NIVEL[dim["nivel"]], -dim["peso"])
 
-    sorted_dims = sorted(annotated, key=sort_key)
+    ordenadas = sorted(anotadas, key=clave_orden)
 
-    # Assign priority_order (1-based)
-    summary = []
-    for rank, dim in enumerate(sorted_dims, start=1):
-        summary.append({**dim, "priority_order": rank})
+    # Resumen con prioridad_orden (1-based)
+    resumen = []
+    for posicion, dim in enumerate(ordenadas, start=1):
+        resumen.append({**dim, "prioridad_orden": posicion})
 
-    # Build plans: critical and high only, max 4
-    plan_candidates = [
-        d for d in sorted_dims
-        if d["level"] in ("critical", "high")
-    ][:4]
+    # Planes: solo crítico y alto, máximo 4
+    candidatas = [d for d in ordenadas if d["nivel"] in ("critico", "alto")][:4]
 
-    plans = []
-    for dim in plan_candidates:
-        actions = _build_plan_actions(dim["id"], dim["level"])
-        plans.append({
+    planes = []
+    for dim in candidatas:
+        acciones = _construir_acciones(dim["id"], dim["nivel"])
+        kpi_valor = acciones["kpi"]
+        if isinstance(kpi_valor, list):
+            kpi_valor = " · ".join(kpi_valor)
+        planes.append({
             "id": dim["id"],
-            "level": dim["level"],
-            "supervisor": actions["supervisor"],
-            "manager": actions["manager"],
-            "system": actions["system"],
-            "kpis": actions["kpis"],
+            "nivel": dim["nivel"],
+            "supervisor": acciones["supervisor"],
+            "jefe": acciones["jefe"],
+            "sistema": acciones["sistema"],
+            "kpi": kpi_valor,
         })
 
     return {
-        "supervisor": supervisor_name,
+        "supervisor": nombre_supervisor,
         "ipra_global": ipra_global,
-        "summary": summary,
-        "plans": plans,
+        "resumen": resumen,
+        "planes": planes,
     }

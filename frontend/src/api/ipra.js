@@ -1,10 +1,16 @@
+// Cliente del API del backend DRF. El contrato (§2.1) usa claves en español.
+
 const BASE_URL = '/api'
 
-export async function generatePlan({ supervisorName, scores }) {
+/**
+ * @param {{nombreSupervisor: string, scores: Array<{id, nombre, peso, score}>}} params
+ * @returns {Promise<object>} Plan de intervención con claves en español.
+ */
+export async function generatePlan({ nombreSupervisor, scores }) {
   const response = await fetch(`${BASE_URL}/plan-intervencion/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ supervisor_name: supervisorName, scores }),
+    body: JSON.stringify({ nombre_supervisor: nombreSupervisor, scores }),
   })
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
