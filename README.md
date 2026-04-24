@@ -101,6 +101,32 @@ npm run dev                       # → http://localhost:5173
 
 ---
 
+## Ejecución con Docker (extra)
+
+Se agregó una configuración Docker para levantar frontend + backend juntos.
+
+> Se usan puertos **distintos** para evitar choque con servidores locales ya corriendo:
+> - Frontend Docker: `http://localhost:5174`
+> - Backend Docker: `http://localhost:8001`
+
+Desde la raíz del repo:
+
+```bash
+docker compose up --build
+```
+
+Endpoints de validación:
+- `GET http://localhost:8001/api/plan-intervencion/`
+- `POST http://localhost:8001/api/plan-intervencion-ia/`
+
+Para detener:
+
+```bash
+docker compose down
+```
+
+---
+
 ## Contrato del API (contrato del enunciado §2.1)
 
 ### POST `/api/plan-intervencion/`
