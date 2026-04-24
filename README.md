@@ -3,6 +3,18 @@
 Implementación full-stack del motor de planes de intervención IPRA.
 **Stack:** Django REST Framework (backend) + React + Vite (frontend).
 
+---
+
+## 🚀 Despliegue en Vivo
+La aplicación ha sido desplegada en Render y está lista para ser probada:
+
+- **Frontend:** [https://talentha-frontend.onrender.com](https://talentha-frontend.onrender.com)
+- **Backend (API):** [https://talentha-backend.onrender.com/api/health/](https://talentha-backend.onrender.com/api/health/)
+
+> **Nota:** Al ser un despliegue en el tier gratuito de Render, el backend puede tardar unos 30-60 segundos en "despertar" si no ha tenido tráfico recientemente.
+
+---
+
 > **Nota importante para revisión:**
 > La solución original de la prueba técnica se mantiene intacta.
 > Se agregó un **BONUS totalmente aparte** llamado **"Plan IPRA con IA"**,
