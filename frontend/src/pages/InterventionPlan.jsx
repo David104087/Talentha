@@ -252,9 +252,6 @@ export default function InterventionPlan() {
             >
               ← Nuevo ingreso
             </button>
-            <button className="btn" onClick={() => window.print()}>
-              Exportar PDF
-            </button>
           </div>
         </div>
 

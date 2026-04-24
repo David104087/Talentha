@@ -94,6 +94,7 @@ export default function ScoreEntry() {
   const navigate = useNavigate()
   const [dims, setDims] = useState(INITIAL_DIMS.map(d => ({ ...d })))
   const [loading, setLoading] = useState(false)
+  const [loadingAI, setLoadingAI] = useState(false)
   const [error, setError] = useState(null)
   const [submitted, setSubmitted] = useState(false)
 
@@ -169,6 +170,31 @@ export default function ScoreEntry() {
       setError(err.message || 'Error al generar el plan. Intenta de nuevo.')
       setLoading(false)
     }
+  }
+
+  function handleSubmitAI() {
+    setSubmitted(true)
+    if (!isValid) {
+      setError('Revisa los campos marcados — los pesos deben sumar 100%.')
+      return
+    }
+
+    setLoadingAI(true)
+    setError(null)
+
+    navigate('/plan-ia', {
+      state: {
+        payload: {
+          nombreSupervisor: 'Sofia Moreno',
+          scores: dims.map(d => ({
+            id: d.id,
+            nombre: d.nombre,
+            peso: Number(d.peso),
+            score: Number(d.score),
+          })),
+        },
+      },
+    })
   }
 
   const globalLevelStyle = LEVEL_STYLES[globalLevel]
@@ -325,9 +351,17 @@ export default function ScoreEntry() {
             <button
               className="btn primary"
               onClick={handleSubmit}
-              disabled={loading || (!isValid && submitted)}
+              disabled={loading || loadingAI || (!isValid && submitted)}
             >
               {loading ? 'Generando…' : 'Generar plan IPRA →'}
+            </button>
+            <button
+              className="btn secondary"
+              onClick={handleSubmitAI}
+              disabled={loading || loadingAI || (!isValid && submitted)}
+              title="BONUS aparte del enunciado base"
+            >
+              {loadingAI ? 'Abriendo módulo IA…' : 'Generar plan IPRA con IA ✨'}
             </button>
           </div>
         </div>

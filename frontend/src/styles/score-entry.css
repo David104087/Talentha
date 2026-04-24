@@ -340,6 +340,15 @@ body {
 }
 .btn.primary:hover { background: #2E2B73; }
 .btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.secondary {
+  background: #EEF0FE;
+  color: #312E81;
+  border-color: #C7D2FE;
+  padding: 11px 20px;
+  font-size: 14px;
+}
+.btn.secondary:hover { background: #E0E7FF; }
+.btn.secondary:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .form-footer {
   display: flex; justify-content: flex-end; align-items: center;
