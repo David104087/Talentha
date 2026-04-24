@@ -178,30 +178,48 @@
   background: #4F46E5;
 }
 
-.loadingItem {
-  color: #4B5563;
-  font-style: italic;
+.roleSkeleton,
+.kpiSkeleton {
+  display: grid;
+  gap: 8px;
+  padding-left: 34px;
+}
+
+.kpiSkeleton {
+  padding-left: 0;
+}
+
+.skeletonLine {
+  height: 10px;
+  border-radius: 999px;
+  width: 100%;
+  background: linear-gradient(90deg, #E7E5ED 20%, #F8F7F4 37%, #E7E5ED 63%);
+  background-size: 400% 100%;
+  animation: skeletonShimmer 1.4s ease infinite;
+}
+
+.w90 { width: 90%; }
+.w80 { width: 80%; }
+.w75 { width: 75%; }
+
+@keyframes skeletonShimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
 }
 
 .errorItem {
   color: #7F1D1D;
 }
 
-.dots {
-  display: inline-block;
-  width: 1.4em;
-  overflow: hidden;
-  vertical-align: bottom;
+.cursor {
+  color: #4F46E5;
+  margin-left: 2px;
+  animation: blink 0.9s step-end infinite;
 }
 
-.dots::after {
-  content: '...';
-  animation: dots 1.2s steps(4, end) infinite;
-}
-
-@keyframes dots {
-  from { width: 0; }
-  to { width: 1.4em; }
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
 .foot {
@@ -219,15 +237,10 @@
   margin-bottom: 6px;
 }
 
-.footKpi,
-.loadingKpi {
+.footKpi {
   color: #3B3866;
   font-size: 12px;
   line-height: 1.55;
-}
-
-.loadingKpi {
-  font-style: italic;
 }
 
 @media (max-width: 1100px) {

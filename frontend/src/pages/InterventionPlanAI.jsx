@@ -52,6 +52,53 @@ function ScoreDial({ value, level }) {
   )
 }
 
+function scrollToSection(id) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function SkippedDims({ resumen, planes }) {
+  const plannedIds = new Set(planes.map(p => p.id))
+  const skipped = resumen.filter(
+    d => (d.nivel === 'critico' || d.nivel === 'alto') && !plannedIds.has(d.id)
+  )
+
+  if (skipped.length === 0) return null
+
+  return (
+    <div className="skipped-dims">
+      <div className="skipped-header">
+        <span className="skipped-title">Dimensiones elegibles sin plan detallado</span>
+        <span className="skipped-sub">
+          Score &lt; 75 — elegibles para intervención, fuera del top 4 por prioridad de peso
+        </span>
+      </div>
+      <div className="skipped-list">
+        {skipped.map(d => {
+          const s = LEVEL_STYLES[d.nivel]
+          return (
+            <div
+              key={d.id}
+              className="skipped-item"
+              style={{ background: s.bg, borderColor: s.ring }}
+            >
+              <span className="skipped-code">{d.id}</span>
+              <span className="skipped-badge" style={{ color: s.fg }}>
+                <span className="skipped-dot" style={{ background: s.fg }} />
+                {s.label}
+              </span>
+              <span className="skipped-name">{d.nombre}</span>
+              <span className="skipped-meta">
+                {d.score} pts · peso {d.peso}%
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function InterventionPlanAI() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -121,11 +168,19 @@ export default function InterventionPlanAI() {
         </div>
 
         <div className="nav-group">
-          <a className="nav-item" href="#section-summary" onClick={e => e.preventDefault()}>
+          <a
+            className="nav-item"
+            href="#section-summary"
+            onClick={e => { e.preventDefault(); scrollToSection('section-summary') }}
+          >
             <span className="dot" />
             <span>Resumen IPRA</span>
           </a>
-          <a className="nav-item" href="#section-plans" onClick={e => e.preventDefault()}>
+          <a
+            className="nav-item"
+            href="#section-plans"
+            onClick={e => { e.preventDefault(); scrollToSection('section-plans') }}
+          >
             <span className="dot" />
             <span>Planes con IA</span>
           </a>
@@ -230,6 +285,10 @@ export default function InterventionPlanAI() {
               selectedId={selected}
               onSelect={setSelected}
             />
+          </div>
+
+          <div id="section-plans" style={{ marginTop: 32 }}>
+            <SkippedDims resumen={plan.resumen} planes={plan.planes} />
           </div>
 
           <footer className="page-footer">

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { LEVEL_STYLES } from '../constants/levels'
 import LevelBadge from './LevelBadge'
@@ -98,13 +99,16 @@ function PlanCard({ plan, resumenDim, rank, highlighted, loading, error }) {
       <footer className={styles.foot}>
         <div className={styles.footLabel}>Indicadores de seguimiento</div>
         {loading ? (
-          <div className={styles.loadingKpi}>
-            IA generando KPI<span className={styles.dots} />
+          <div className={styles.kpiSkeleton} aria-label="Cargando KPI con IA">
+            <div className={styles.skeletonLine} />
+            <div className={`${styles.skeletonLine} ${styles.w80}`} />
           </div>
         ) : error ? (
           <div className={styles.footKpi}>No se pudo generar KPI con IA para esta dimensión.</div>
         ) : (
-          <div className={styles.footKpi}>{plan.kpi}</div>
+          <div className={styles.footKpi}>
+            <TypewriterText text={plan.kpi} active speed={8} />
+          </div>
         )}
       </footer>
     </article>
@@ -120,20 +124,64 @@ function RoleBlock({ iconClass, title, actions, loading, error }) {
       </div>
 
       {loading ? (
-        <ul className={styles.roleList}>
-          <li className={styles.loadingItem}>La IA está generando acciones<span className={styles.dots} /></li>
-          <li className={styles.loadingItem}>Ajustando contexto industrial colombiano<span className={styles.dots} /></li>
-        </ul>
+        <div className={styles.roleSkeleton} aria-label="Cargando acciones con IA">
+          <div className={styles.skeletonLine} />
+          <div className={`${styles.skeletonLine} ${styles.w90}`} />
+          <div className={`${styles.skeletonLine} ${styles.w75}`} />
+        </div>
       ) : error ? (
         <ul className={styles.roleList}>
           <li className={styles.errorItem}>No disponible por fallo de conexión con IA.</li>
         </ul>
       ) : (
         <ul className={styles.roleList}>
-          {actions.map((a, i) => <li key={i}>{a}</li>)}
+          {actions.map((a, i) => (
+            <li key={i}>
+              <TypewriterText text={a} active delay={i * 320} />
+            </li>
+          ))}
         </ul>
       )}
     </div>
+  )
+}
+
+function TypewriterText({ text, active, speed = 12, delay = 0 }) {
+  const [output, setOutput] = useState(active ? '' : text)
+
+  useEffect(() => {
+    if (!active) {
+      setOutput(text)
+      return undefined
+    }
+
+    setOutput('')
+    let i = 0
+    let intervalId
+
+    const timeoutId = window.setTimeout(() => {
+      intervalId = window.setInterval(() => {
+        i += 1
+        setOutput(text.slice(0, i))
+        if (i >= text.length) {
+          window.clearInterval(intervalId)
+        }
+      }, speed)
+    }, delay)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      if (intervalId) window.clearInterval(intervalId)
+    }
+  }, [text, active, speed, delay])
+
+  const done = output.length >= text.length
+
+  return (
+    <span>
+      {output}
+      {!done && <span className={styles.cursor}>▍</span>}
+    </span>
   )
 }
 
@@ -163,4 +211,11 @@ RoleBlock.propTypes = {
   actions: PropTypes.arrayOf(PropTypes.string).isRequired,
   loading: PropTypes.bool,
   error: PropTypes.bool,
+}
+
+TypewriterText.propTypes = {
+  text: PropTypes.string.isRequired,
+  active: PropTypes.bool,
+  speed: PropTypes.number,
+  delay: PropTypes.number,
 }
