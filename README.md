@@ -1,43 +1,43 @@
-# Talentha — IPRA Intervention Plan
+# Talentha — Plan de Intervención IPRA
 
-Full-stack implementation of the IPRA intervention plan engine.
+Implementación full-stack del motor de planes de intervención IPRA.
 **Stack:** Django REST Framework (backend) + React + Vite (frontend).
 
 ---
 
-## Project Structure
+## Estructura del proyecto
 
 ```
 talentha/
 ├── backend/
-│   ├── plan_intervencion.py        # Pure Python: generar_plan_intervencion, get_semaforo, calcular_ipra_global
-│   ├── planes_contenido.py         # Action content for D4-critical and D1-critical
-│   ├── test_plan_intervencion.py   # Unit tests (18 tests, stdlib unittest)
+│   ├── plan_intervencion.py        # Python puro: generar_plan_intervencion, get_semaforo, calcular_ipra_global
+│   ├── planes_contenido.py         # Contenido de acciones para D4-crítico y D1-crítico
+│   ├── test_plan_intervencion.py   # Tests unitarios (18 tests, unittest de stdlib)
 │   ├── manage.py
 │   ├── requirements.txt
-│   ├── talentha/                   # Django project
+│   ├── talentha/                   # Proyecto Django
 │   │   ├── settings.py
 │   │   └── urls.py
-│   └── ipra/                       # Django app
-│       ├── views.py                # InterventionPlanView (DRF APIView)
+│   └── ipra/                       # App Django
+│       ├── views.py                # InterventionPlanView (APIView de DRF)
 │       └── urls.py
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
-│   │   │   ├── ScoreEntry.jsx      # Screen 1 — score input form
-│   │   │   └── InterventionPlan.jsx # Screen 2 — plan display
+│   │   │   ├── ScoreEntry.jsx        # Pantalla 1 — formulario de ingreso de scores
+│   │   │   └── InterventionPlan.jsx  # Pantalla 2 — visualización del plan
 │   │   └── components/
-│   │       ├── PlanIntervencion.jsx # Plan cards component
-│   │       └── TablaResumenIPRA.jsx # Summary table (Bonus B, with propTypes)
+│   │       ├── PlanIntervencion.jsx  # Componente de tarjetas del plan
+│   │       └── TablaResumenIPRA.jsx  # Tabla resumen (Bonus B, con propTypes)
 │   ├── package.json
 │   └── vite.config.js
-├── arquitectura.md                 # Architecture answer (Part 3) + Bonus C
+├── arquitectura.md                 # Respuesta de arquitectura (Parte 3) + Bonus C
 └── README.md
 ```
 
 ---
 
-## Running Locally
+## Cómo correrlo localmente
 
 ### Backend
 
@@ -50,11 +50,11 @@ python manage.py migrate
 python manage.py runserver        # → http://localhost:8000
 ```
 
-The API endpoint is available at:
-- `GET  http://localhost:8000/api/plan-intervencion/` — returns demo plan (Sofia Moreno)
-- `POST http://localhost:8000/api/plan-intervencion/` — generates plan from submitted scores
+El endpoint del API está disponible en:
+- `GET  http://localhost:8000/api/plan-intervencion/` — devuelve un plan demo (Sofía Moreno)
+- `POST http://localhost:8000/api/plan-intervencion/` — genera un plan a partir de los scores enviados
 
-### Running Unit Tests (standalone, no Django needed)
+### Correr los tests unitarios (standalone, sin Django)
 
 ```bash
 cd backend
@@ -69,21 +69,21 @@ npm install
 npm run dev                       # → http://localhost:5173
 ```
 
-> Vite proxies `/api/*` requests to `http://localhost:8000`, so the frontend and backend can run simultaneously without CORS issues in development.
+> Vite proxea las peticiones `/api/*` a `http://localhost:8000`, así el frontend y el backend pueden correr en paralelo sin problemas de CORS en desarrollo.
 
 ---
 
-## API Contract
+## Contrato del API
 
 ### POST `/api/plan-intervencion/`
 
-**Request body:**
+**Body de la petición:**
 ```json
 {
   "supervisor_name": "Sofia Moreno",
   "scores": [
-    {"id": "D1", "name": "Controles Críticos y Condiciones del Área", "weight": 16, "score": 36.4},
-    {"id": "D2", "name": "Planeación y Arranque Seguro del Trabajo",  "weight": 13, "score": 32.5},
+    {"id": "D1", "name": "Controles Críticos y Condiciones del Área",  "weight": 16, "score": 36.4},
+    {"id": "D2", "name": "Planeación y Arranque Seguro del Trabajo",   "weight": 13, "score": 32.5},
     {"id": "D3", "name": "Cumplimiento y Exigencia de Reglas",         "weight": 14, "score": 36.4},
     {"id": "D4", "name": "Detención de Trabajos Inseguros (Stop Work)","weight": 18, "score": 32.5},
     {"id": "D5", "name": "Aprendizaje de Incidentes",                  "weight": 11, "score": 32.5},
@@ -94,39 +94,39 @@ npm run dev                       # → http://localhost:5173
 }
 ```
 
-**Response:**
+**Respuesta:**
 ```json
 {
   "supervisor": "Sofia Moreno",
   "ipra_global": 41.4,
-  "summary": [...],   // all 8 dimensions with level, deadline, priority_order
-  "plans": [...]      // max 4: critical first (by weight DESC), then high (by weight DESC)
+  "summary": [...],   // las 8 dimensiones con nivel, plazo y priority_order
+  "plans": [...]      // máx. 4: primero críticas (por peso DESC), luego altas (por peso DESC)
 }
 ```
 
 ---
 
-## Risk Level Reference
+## Referencia de niveles de riesgo
 
-| Score | Level | Code | Deadline |
+| Score | Nivel | Código | Plazo |
 |---|---|---|---|
-| 0 – 64 | Crítico | `critical` | 0–15 days |
-| 65 – 74 | Alto | `high` | 15–30 days |
-| 75 – 84 | Moderado | `moderate` | 30–60 days |
-| ≥ 85 | Bajo | `low` | Maintenance |
+| 0 – 64 | Crítico | `critical` | 0–15 días |
+| 65 – 74 | Alto | `high` | 15–30 días |
+| 75 – 84 | Moderado | `moderate` | 30–60 días |
+| ≥ 85 | Bajo | `low` | Sostenimiento |
 
 ---
 
-## Test Data — Expected Results
+## Datos de prueba — resultados esperados
 
-Input: Sofia Moreno's scores (as above)
+Input: los scores de Sofía Moreno (ver arriba).
 
-| Check | Expected |
+| Verificación | Valor esperado |
 |---|---|
 | IPRA global | 41.4 |
-| Plans generated | 4: D4, D1, D3, D2 (all critical) |
-| First plan | D4 — Stop Work (highest weight: 18%) |
-| D7 level | `high` (score 68.0) — appears in summary only |
-| D8 level | `moderate` (score 82.0) — no plan generated |
+| Planes generados | 4: D4, D1, D3, D2 (todas críticas) |
+| Primer plan | D4 — Stop Work (mayor peso: 18%) |
+| Nivel de D7 | `high` (score 68.0) — aparece solo en el resumen |
+| Nivel de D8 | `moderate` (score 82.0) — no genera plan |
 
-> **Note:** The spec's expected IPRA of 40.2 is a typo. The correct weighted sum `Σ(score_i × weight_i / 100)` with the given data equals 41.395 ≈ **41.4**.
+> **Nota sobre el IPRA esperado:** el spec indica 40.2 pero la fórmula declarada `Σ(score_i × peso_i / 100)` con los datos del enunciado da `41.395 ≈ 41.4`. La implementación respeta la fórmula del spec, por lo que el valor correcto es **41.4**. El "40.2" del documento es un error de cálculo en el enunciado.
