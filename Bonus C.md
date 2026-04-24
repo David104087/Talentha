@@ -1,0 +1,3 @@
+## Bonus C — Dimensiones con >50% de respuestas N/A
+
+Si más del 50% de los evaluadores responde N/A en una dimensión, el score no es estadísticamente fiable y se **excluye del cálculo del `ipra_global`**. Los pesos del resto se renormalizan proporcionalmente para seguir sumando 100% y el IPRA global se recalcula sobre el subconjunto válido. La dimensión aparece en `resumen` con un badge "Respuestas insuficientes" pero **no entra a `planes`** — asignar acciones correctivas sobre datos poco fiables sería engañoso. Se notifica al analista para recolectar más respuestas antes de decidir sobre esa dimensión.
