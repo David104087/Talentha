@@ -13,10 +13,10 @@ from planes_contenido import PLAN_CONTENT
 _LEVEL_ORDER = {"critical": 0, "high": 1, "moderate": 2, "low": 3}
 
 _DEADLINES = {
-    "critical": "0-15 days",
-    "high": "15-30 days",
-    "moderate": "30-60 days",
-    "low": "Maintenance",
+    "critical": "0–15 días",
+    "high": "15–30 días",
+    "moderate": "30–60 días",
+    "low": "Sostenimiento",
 }
 
 
@@ -97,25 +97,21 @@ def _build_plan_actions(dimension_id: str, level: str) -> dict:
     if content is not None:
         return content
 
-    # Placeholder for combinations not yet authored
+    # Texto placeholder para combinaciones no detalladas en esta versión
     return {
         "supervisor": [
-            f"[{dimension_id}] Define and implement immediate corrective actions "
-            f"to address the {level}-level gap identified in this dimension.",
-            f"[{dimension_id}] Conduct daily follow-up with the team until the "
-            f"score reaches a safe threshold.",
+            f"Acción de intervención para {dimension_id} en nivel {level} — supervisor.",
+            f"Realizar seguimiento diario con el equipo hasta superar el umbral de riesgo en esta dimensión.",
         ],
         "manager": [
-            f"[{dimension_id}] Provide direct support and resources to resolve "
-            f"the {level} findings within the established deadline.",
+            f"Acción de intervención para {dimension_id} en nivel {level} — jefe directo.",
         ],
         "system": [
-            f"[{dimension_id}] Review organizational procedures and update "
-            f"standards to prevent recurrence of {level}-level deficiencies.",
+            f"Acción de intervención para {dimension_id} en nivel {level} — sistema / organización.",
         ],
         "kpis": [
-            f"[{dimension_id}] % improvement in dimension score at next evaluation",
-            f"[{dimension_id}] Number of corrective actions completed on time",
+            f"% de mejora en el score de {dimension_id} en la próxima evaluación",
+            f"Número de acciones correctivas cerradas en el plazo establecido",
         ],
     }
 

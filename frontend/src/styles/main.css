@@ -301,7 +301,16 @@ body {
 }
 .score-dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .score-dial .track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 10; }
-.score-dial .fill { fill: none; stroke-width: 10; stroke-linecap: round; }
+.score-dial .fill {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.08));
+}
+.score-dial[data-animated="false"] .fill {
+  transition: none;
+}
 .score-dial .num {
   position: absolute;
   inset: 0;
@@ -320,6 +329,12 @@ body {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-top: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-dial .fill {
+    transition: none;
+  }
 }
 .score-right .eyebrow {
   font-family: var(--font-mono);
