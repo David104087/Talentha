@@ -186,11 +186,11 @@ export default function ScoreEntry() {
 
         <div className="top-user">
           <div className="u-text">
-            <div className="u-name">Carolina Mejía</div>
+            <div className="u-name">Sofía Moreno</div>
             <div className="u-sub">Analista HSE</div>
           </div>
           <div className="avatar-photo" aria-hidden="true">
-            <span>CM</span>
+            <span>SM</span>
           </div>
         </div>
       </header>
@@ -299,9 +299,6 @@ export default function ScoreEntry() {
                   </strong>
                 </td>
                 <td>
-                  <LevelBadge level={globalLevel} />
-                </td>
-                <td>
                   <strong
                     style={{
                       color: Math.abs(totalWeight - 100) > 0.5 ? '#B91C1C' : '#059669',
@@ -310,7 +307,7 @@ export default function ScoreEntry() {
                     {totalWeight}%
                   </strong>
                 </td>
-                <td colSpan="2" className="muted">
+                <td className="muted">
                   {Math.abs(totalWeight - 100) > 0.5
                     ? '⚠ Los pesos deben sumar exactamente 100%'
                     : '✓ Listo para generar'}

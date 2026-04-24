@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { LEVEL_STYLES, getSemaforo } from '../constants/levels'
 import TablaResumenIPRA from '../components/TablaResumenIPRA'
@@ -142,6 +142,8 @@ export default function InterventionPlan() {
   const plan = location.state?.plan || DEMO_PLAN
   const [selected, setSelected] = useState(plan.plans[0]?.id || 'D4')
   const [navActive, setNavActive] = useState('section-summary')
+
+  useEffect(() => { window.scrollTo(0, 0) }, [])
 
   const globalLevel = getSemaforo(plan.ipra_global)
   const globalStyle = LEVEL_STYLES[globalLevel]
