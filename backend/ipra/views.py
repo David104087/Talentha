@@ -10,6 +10,11 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
+class HealthView(APIView):
+    def get(self, request):
+        return Response({"status": "ok"})
+
+
 class InterventionPlanView(APIView):
     """
     POST /api/plan-intervencion/

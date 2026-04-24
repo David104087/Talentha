@@ -2,15 +2,16 @@
 Django settings for the Talentha IPRA project.
 """
 
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "talentha-ipra-dev-secret-key-change-in-production"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "talentha-ipra-dev-secret-key-change-in-production")
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "*").split(",") if host.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
@@ -30,7 +31,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+cors_allowed_origins = os.getenv("CORS_ALLOWED_ORIGINS", "")
+CORS_ALLOW_ALL_ORIGINS = cors_allowed_origins.strip() == "*"
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_allowed_origins.split(",") if origin.strip() and origin.strip() != "*"]
 
 ROOT_URLCONF = "talentha.urls"
 

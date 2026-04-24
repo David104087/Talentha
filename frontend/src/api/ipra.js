@@ -1,6 +1,6 @@
 // Cliente del API del backend DRF. El contrato (§2.1) usa claves en español.
 
-const BASE_URL = '/api'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 /**
  * @param {{nombreSupervisor: string, scores: Array<{id, nombre, peso, score}>}} params
